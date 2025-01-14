@@ -1,0 +1,6 @@
+name: gdu
+desc: "Fast disk usage analyzer with console interface written in Go "
+refs:
+  - repo: https://github.com/dundee/gdu.git
+  - homepage: https://github.com/dundee/gdu.git
+version: 5.30.1

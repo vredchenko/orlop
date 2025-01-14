@@ -1,0 +1,6 @@
+name: name
+desc: "short desc"
+refs:
+  - repo: github repo
+  - homepage: if different from github repo
+version: currently used version number

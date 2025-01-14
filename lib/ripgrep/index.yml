@@ -1,0 +1,6 @@
+name: ripgrep
+desc: "ripgrep recursively searches directories for a regex pattern while respecting your gitignore "
+refs:
+  - repo: https://github.com/BurntSushi/ripgrep.git
+  - homepage: https://github.com/BurntSushi/ripgrep.git
+version: 14.1.1
