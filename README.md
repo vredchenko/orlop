@@ -1,6 +1,17 @@
-# orlop
+# Orlop Deck - an opinionated CLI toolbelt
 
-Orlop Deck project - an opinionated CLI tool-belt
+**What's with the naming?**
+
+> The orlop is the lowest deck in a ship (except for very old ships).
+> It is the deck or part of a deck where the cables are stowed, usually below the water line.
+> It has been suggested the name originates from "overlooping" of the cables, or alternatively,
+> that the name is a corruption of "overlap", referring to an overlapping,
+> balcony-like half deck occupying a portion of the ship's lowest deck space.
+> According to the Oxford English Dictionary, the word descends from Dutch overloop from the verb overlopen,
+> "to run (over); extend".
+
+https://en.wikipedia.org/wiki/Orlop_deck
+
 
 ## Dependencies
 
@@ -11,9 +22,6 @@ Orlop Deck project - an opinionated CLI tool-belt
 ## Quick start
 
 ```sh
-# clean up prev container and rebuild
-./dev.sh
-
 # develop toolchain
 cd src/
 bun install
@@ -31,21 +39,19 @@ python src/check_release.py zyedidia micro
 
 ```
 
-## build Dockerfile
+## directory structure
 
-`./dev.sh`
+- `/base` dir is for common dependencies and assets that form the base layer of an installation, such as
+    NerdFonts, Starship Shell, etc
+- `/lib` dir contains an inventory of Orlop Deck tools, one per subdirectory. Every such subdirectory is
+  expected to conform to a specific file structure
+- `/templates/lib-item` defines specific file structure for subdirectories in `/lib`
+- `/src` is where the dev codebase lives - a mix of ts / python / bash
+
+## dev notes
 
 ```sh
-# build
-docker build -t orlop-base:dev .
-
-# run with interactive shell
-docker run -it orlop-base bash
-
-# run and exec bash (get container to wait?)
-#docker run -d --name mycontainer orlop-base
-#docker exec -it mycontainer bash
-
-# clean up
-docker rm -f mycontainer
+docker image rm orlopdeck:dev -f
+docker build --progress=plain --platform linux/amd64 -t orlopdeck:dev .
+docker run -it orlopdeck:dev -c /bin/bash
 ```

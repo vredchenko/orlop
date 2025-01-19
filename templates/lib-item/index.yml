@@ -1,6 +1,9 @@
 name: name
 desc: "short desc"
+# used for latest release checking script:
+github:
+  - repo_owner: repository owner
+  - repo_name: repository name
 refs:
   - repo: github repo
   - homepage: if different from github repo
-version: currently used version number
