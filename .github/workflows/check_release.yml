@@ -35,16 +35,16 @@ jobs:
         id: check_version
 
       # Optional: Create an issue if you want to be notified about the version
-      - name: Create Issue
-        if: success()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const version = process.env.RELEASE_VERSION;
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `Latest stable release version: ${version}`,
-              body: `The latest stable release version is: ${version}`
-            });
+#      - name: Create Issue
+#        if: success()
+#        uses: actions/github-script@v7
+#        with:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#          script: |
+#            const version = process.env.RELEASE_VERSION;
+#            await github.rest.issues.create({
+#              owner: context.repo.owner,
+#              repo: context.repo.repo,
+#              title: `Latest stable release version: ${version}`,
+#              body: `The latest stable release version is: ${version}`
+#            });
