@@ -1,11 +1,12 @@
 # orlop
 
-Orlop Deck project - an opinionated CLI tool-belt.
+Orlop Deck project - an opinionated CLI tool-belt
 
 ## Dependencies
 
 - docker && docker compose
 - bun.js
+- python 3.12
 
 ## Quick start
 
@@ -16,6 +17,18 @@ Orlop Deck project - an opinionated CLI tool-belt.
 # develop toolchain
 cd src/
 bun install
+
+# check github repo for latest release
+export GITHUB_TOKEN=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 && \
+python src/check_release.py dundee gdu
+
+source example.env
+python src/check_release.py dundee gdu
+python src/check_release.py lsd-rs lsd
+python src/check_release.py BurntSushi ripgrep
+python src/check_release.py tomnomnom gron
+python src/check_release.py zyedidia micro
+
 ```
 
 ## build Dockerfile
