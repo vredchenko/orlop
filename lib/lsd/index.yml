@@ -1,9 +1,0 @@
-name: lsd
-desc: "The next gen ls command"
-# used for latest release checking script:
-github:
-  - repo_owner: lsd-rs
-  - repo_name: lsd
-refs:
-  - repo: https://github.com/lsd-rs/lsd.git
-  - homepage: https://github.com/lsd-rs/lsd.git

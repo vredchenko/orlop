@@ -1,9 +1,0 @@
-name: gdu
-desc: "Fast disk usage analyzer with console interface written in Go "
-# used for latest release checking script:
-github:
-  - repo_owner: dundee
-  - repo_name: gdu
-refs:
-  - repo: https://github.com/dundee/gdu.git
-  - homepage: https://github.com/dundee/gdu.git
