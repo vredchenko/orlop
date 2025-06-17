@@ -1,0 +1,72 @@
+---
+# Tasks for delta role
+
+- name: Get latest delta release info
+  uri:
+    url: "https://api.github.com/repos/dandavison/delta/releases/latest"
+    method: GET
+  register: delta_release_info
+  tags:
+    - delta
+
+- name: Set delta version and download URL
+  set_fact:
+    delta_version: "{{ delta_release_info.json.tag_name }}"
+    delta_download_url: "https://github.com/dandavison/delta/releases/download/{{ delta_release_info.json.tag_name }}/git-delta_{{ delta_release_info.json.tag_name }}_amd64.deb"
+    delta_filename: "git-delta_{{ delta_release_info.json.tag_name }}_amd64.deb"
+  tags:
+    - delta
+
+- name: Ensure Downloads directory exists
+  file:
+    path: "/home/{{ ansible_user }}/Downloads"
+    state: directory
+    mode: '0755'
+  tags:
+    - delta
+
+- name: Download latest delta .deb package
+  get_url:
+    url: "{{ delta_download_url }}"
+    dest: "/home/{{ ansible_user }}/Downloads/{{ delta_filename }}"
+    mode: '0644'
+  tags:
+    - delta
+
+- name: Install delta package
+  apt:
+    deb: "/home/{{ ansible_user }}/Downloads/{{ delta_filename }}"
+    state: present
+  become: yes
+  tags:
+    - delta
+
+- name: Check if git is installed
+  command: which git
+  register: git_check
+  failed_when: false
+  changed_when: false
+  tags:
+    - delta
+
+- name: Configure git to use delta as pager
+  git_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    scope: global
+  loop:
+    - { name: "core.pager", value: "delta" }
+    - { name: "interactive.diffFilter", value: "delta --color-only" }
+    - { name: "delta.navigate", value: "true" }
+    - { name: "merge.conflictStyle", value: "zdiff3" }
+  when: git_check.rc == 0
+  become_user: "{{ ansible_user }}"
+  tags:
+    - delta
+
+- name: Clean up downloaded .deb file
+  file:
+    path: "/home/{{ ansible_user }}/Downloads/{{ delta_filename }}"
+    state: absent
+  tags:
+    - delta

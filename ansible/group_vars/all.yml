@@ -1,0 +1,4 @@
+---
+# Global variables for all hosts
+ansible_user: jcousteau
+become_method: sudo

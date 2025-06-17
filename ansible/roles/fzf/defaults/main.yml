@@ -1,0 +1,3 @@
+---
+# Default variables for fzf role
+fzf_state: present

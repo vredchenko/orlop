@@ -1,0 +1,3 @@
+---
+# Default variables for micro role
+micro_state: present

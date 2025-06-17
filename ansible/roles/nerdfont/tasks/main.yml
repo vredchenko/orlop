@@ -1,0 +1,89 @@
+---
+# Tasks for nerdfont role
+
+- name: Install fontconfig and unzip packages
+  apt:
+    name:
+      - fontconfig
+      - unzip
+    state: present
+  become: yes
+  tags:
+    - nerdfont
+
+- name: Get latest nerd-fonts release info
+  uri:
+    url: "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest"
+    method: GET
+  register: nerdfont_release_info
+  tags:
+    - nerdfont
+
+- name: Set nerdfont version and download URLs
+  set_fact:
+    nerdfont_version: "{{ nerdfont_release_info.json.tag_name }}"
+    fonts_to_install:
+      - name: "FiraCode"
+        url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ nerdfont_release_info.json.tag_name }}/FiraCode.zip"
+      - name: "DejaVuSansMono"
+        url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ nerdfont_release_info.json.tag_name }}/DejaVuSansMono.zip"
+  tags:
+    - nerdfont
+
+- name: Ensure fonts directory exists
+  file:
+    path: "/home/{{ ansible_user }}/fonts"
+    state: directory
+    mode: '0755'
+  tags:
+    - nerdfont
+
+- name: Ensure Downloads directory exists
+  file:
+    path: "/home/{{ ansible_user }}/Downloads"
+    state: directory
+    mode: '0755'
+  tags:
+    - nerdfont
+
+- name: Download nerd fonts
+  get_url:
+    url: "{{ item.url }}"
+    dest: "/home/{{ ansible_user }}/Downloads/{{ item.name }}.zip"
+    mode: '0644'
+  loop: "{{ fonts_to_install }}"
+  tags:
+    - nerdfont
+
+- name: Create font-specific directories
+  file:
+    path: "/home/{{ ansible_user }}/fonts/{{ item.name }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ fonts_to_install }}"
+  tags:
+    - nerdfont
+
+- name: Extract fonts to fonts directory
+  unarchive:
+    src: "/home/{{ ansible_user }}/Downloads/{{ item.name }}.zip"
+    dest: "/home/{{ ansible_user }}/fonts/{{ item.name }}"
+    remote_src: yes
+    creates: "/home/{{ ansible_user }}/fonts/{{ item.name }}"
+  loop: "{{ fonts_to_install }}"
+  tags:
+    - nerdfont
+
+- name: Update font cache
+  command: fc-cache -f -v
+  changed_when: false
+  tags:
+    - nerdfont
+
+- name: Clean up downloaded zip files
+  file:
+    path: "/home/{{ ansible_user }}/Downloads/{{ item.name }}.zip"
+    state: absent
+  loop: "{{ fonts_to_install }}"
+  tags:
+    - nerdfont

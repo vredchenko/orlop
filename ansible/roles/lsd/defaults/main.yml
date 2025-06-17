@@ -1,0 +1,3 @@
+---
+# Default variables for lsd role
+lsd_state: present

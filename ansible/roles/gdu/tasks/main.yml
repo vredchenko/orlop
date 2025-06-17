@@ -1,0 +1,55 @@
+---
+# Tasks for gdu role
+
+- name: Ensure Downloads directory exists
+  file:
+    path: "/home/{{ ansible_user }}/Downloads"
+    state: directory
+    mode: '0755'
+  tags:
+    - gdu
+
+- name: Download gdu tarball
+  get_url:
+    url: "https://github.com/dundee/gdu/releases/latest/download/gdu_linux_amd64.tgz"
+    dest: "/home/{{ ansible_user }}/Downloads/gdu_linux_amd64.tgz"
+    mode: '0644'
+  tags:
+    - gdu
+
+- name: Extract gdu tarball
+  unarchive:
+    src: "/home/{{ ansible_user }}/Downloads/gdu_linux_amd64.tgz"
+    dest: "/home/{{ ansible_user }}/Downloads"
+    remote_src: yes
+  tags:
+    - gdu
+
+- name: Ensure .local/bin directory exists
+  file:
+    path: "/home/{{ ansible_user }}/.local/bin"
+    state: directory
+    mode: '0755'
+  tags:
+    - gdu
+
+- name: Install gdu to .local/bin
+  copy:
+    src: "/home/{{ ansible_user }}/Downloads/gdu_linux_amd64"
+    dest: "/home/{{ ansible_user }}/.local/bin/gdu"
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    remote_src: yes
+  tags:
+    - gdu
+
+- name: Clean up downloaded files
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "/home/{{ ansible_user }}/Downloads/gdu_linux_amd64.tgz"
+    - "/home/{{ ansible_user }}/Downloads/gdu_linux_amd64"
+  tags:
+    - gdu

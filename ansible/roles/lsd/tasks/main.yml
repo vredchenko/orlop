@@ -1,0 +1,58 @@
+---
+# Tasks for lsd role
+
+- name: Get latest lsd release info
+  uri:
+    url: "https://api.github.com/repos/lsd-rs/lsd/releases/latest"
+    method: GET
+  register: lsd_release_info
+  tags:
+    - lsd
+
+- name: Set lsd version and download URL
+  set_fact:
+    lsd_version: "{{ lsd_release_info.json.tag_name }}"
+    lsd_download_url: "https://github.com/lsd-rs/lsd/releases/download/{{ lsd_release_info.json.tag_name }}/lsd_{{ lsd_release_info.json.tag_name | regex_replace('^v', '') }}_amd64_xz.deb"
+    lsd_filename: "lsd_{{ lsd_release_info.json.tag_name | regex_replace('^v', '') }}_amd64_xz.deb"
+  tags:
+    - lsd
+
+- name: Ensure Downloads directory exists
+  file:
+    path: "/home/{{ ansible_user }}/Downloads"
+    state: directory
+    mode: '0755'
+  tags:
+    - lsd
+
+- name: Download latest lsd .deb package
+  get_url:
+    url: "{{ lsd_download_url }}"
+    dest: "/home/{{ ansible_user }}/Downloads/{{ lsd_filename }}"
+    mode: '0644'
+  tags:
+    - lsd
+
+- name: Install lsd package
+  apt:
+    deb: "/home/{{ ansible_user }}/Downloads/{{ lsd_filename }}"
+    state: present
+  become: yes
+  tags:
+    - lsd
+
+- name: Add lsd alias to bashrc
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "alias lsd='lsd -la'"
+    create: yes
+    backup: yes
+  tags:
+    - lsd
+
+- name: Clean up downloaded .deb file
+  file:
+    path: "/home/{{ ansible_user }}/Downloads/{{ lsd_filename }}"
+    state: absent
+  tags:
+    - lsd
