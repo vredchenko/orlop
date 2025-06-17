@@ -12,12 +12,35 @@
 
 https://en.wikipedia.org/wiki/Orlop_deck
 
-
 ## Dependencies
 
+- ansible/
 - docker && docker compose
 - bun.js
-- python 3.12
+- python 3.13
+
+
+## Install on VM using Ansible
+
+> Note: currently configured for homebox VM
+
+```bash
+# install Ansible on control machine
+sudo apt install ansible -y
+sudo apt install sshpass -y
+
+# for exposing VM on hostos network
+sudo apt install bridge-utils nmap -y
+
+# cd into this directory
+cd ansible
+
+# test connectivity
+ansible homebox -i inventory/hosts.yml -m ping
+
+# apply config to target machine
+ansible-playbook -i inventory/hosts.yml playbooks/site.yml -vv
+```
 
 ## Quick start
 
@@ -26,26 +49,10 @@ https://en.wikipedia.org/wiki/Orlop_deck
 cd src/
 bun install
 
-# check github repo for latest release
-export GITHUB_TOKEN=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 && \
-python src/check_release.py dundee gdu
-
-source example.env
-python src/check_release.py dundee gdu
-python src/check_release.py lsd-rs lsd
-python src/check_release.py BurntSushi ripgrep
-python src/check_release.py tomnomnom gron
-python src/check_release.py zyedidia micro
-
 ```
 
 ## directory structure
 
-- `/base` dir is for common dependencies and assets that form the base layer of an installation, such as
-    NerdFonts, Starship Shell, etc
-- `/lib` dir contains an inventory of Orlop Deck tools, one per subdirectory. Every such subdirectory is
-  expected to conform to a specific file structure
-- `/templates/lib-item` defines specific file structure for subdirectories in `/lib`
 - `/src` is where the dev codebase lives - a mix of ts / python / bash
 
 ## dev notes

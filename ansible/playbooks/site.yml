@@ -1,0 +1,15 @@
+---
+- name: Install Orlop toolbelt
+  hosts: all
+  become: true
+  roles:
+    - ripgrep
+    - gron
+    - fzf
+    - bat
+    - delta
+    - lsd
+    - gdu
+    - micro
+    - nerdfont
+    - starship

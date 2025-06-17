@@ -1,0 +1,104 @@
+---
+# Tasks for starship role
+
+- name: Get latest starship release info
+  uri:
+    url: "https://api.github.com/repos/starship/starship/releases/latest"
+    method: GET
+  register: starship_release_info
+  tags:
+    - starship
+
+- name: Set starship version and download URL
+  set_fact:
+    starship_version: "{{ starship_release_info.json.tag_name }}"
+    starship_download_url: "https://github.com/starship/starship/releases/download/{{ starship_release_info.json.tag_name }}/starship-x86_64-unknown-linux-gnu.tar.gz"
+    starship_filename: "starship-{{ starship_release_info.json.tag_name }}-x86_64-unknown-linux-gnu.tar.gz"
+  tags:
+    - starship
+
+- name: Ensure Downloads directory exists
+  file:
+    path: "/home/{{ ansible_user }}/Downloads"
+    state: directory
+    mode: '0755'
+  tags:
+    - starship
+
+- name: Download latest starship tarball
+  get_url:
+    url: "{{ starship_download_url }}"
+    dest: "/home/{{ ansible_user }}/Downloads/{{ starship_filename }}"
+    mode: '0644'
+  tags:
+    - starship
+
+- name: Extract starship tarball
+  unarchive:
+    src: "/home/{{ ansible_user }}/Downloads/{{ starship_filename }}"
+    dest: "/home/{{ ansible_user }}/Downloads"
+    remote_src: yes
+  tags:
+    - starship
+
+- name: Ensure .local/bin directory exists
+  file:
+    path: "/home/{{ ansible_user }}/.local/bin"
+    state: directory
+    mode: '0755'
+  tags:
+    - starship
+
+- name: Install starship to .local/bin
+  copy:
+    src: "/home/{{ ansible_user }}/Downloads/starship"
+    dest: "/home/{{ ansible_user }}/.local/bin/starship"
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    remote_src: yes
+  tags:
+    - starship
+
+- name: Ensure .config directory exists
+  file:
+    path: "/home/{{ ansible_user }}/.config"
+    state: directory
+    mode: '0755'
+  tags:
+    - starship
+
+- name: Set starship tokyo-night preset
+  shell: "/home/{{ ansible_user }}/.local/bin/starship preset tokyo-night -o /home/{{ ansible_user }}/.config/starship.toml"
+  args:
+    creates: "/home/{{ ansible_user }}/.config/starship.toml"
+  tags:
+    - starship
+
+- name: Add .local/bin to PATH in bashrc
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: 'export PATH="$HOME/.local/bin:$PATH"'
+    create: yes
+    backup: yes
+  tags:
+    - starship
+
+- name: Add starship to bashrc
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: 'eval "$(starship init bash)"'
+    create: yes
+    backup: yes
+  tags:
+    - starship
+
+- name: Clean up downloaded files
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "/home/{{ ansible_user }}/Downloads/{{ starship_filename }}"
+    - "/home/{{ ansible_user }}/Downloads/starship"
+  tags:
+    - starship

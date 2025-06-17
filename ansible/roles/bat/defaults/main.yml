@@ -1,0 +1,3 @@
+---
+# Default variables for bat role
+bat_state: present

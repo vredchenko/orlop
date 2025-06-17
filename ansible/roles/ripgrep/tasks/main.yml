@@ -1,0 +1,49 @@
+---
+# Tasks for ripgrep role
+
+- name: Get latest ripgrep release info
+  uri:
+    url: "https://api.github.com/repos/BurntSushi/ripgrep/releases/latest"
+    method: GET
+  register: ripgrep_release_info
+  tags:
+    - ripgrep
+
+- name: Set ripgrep version and download URL
+  set_fact:
+    ripgrep_version: "{{ ripgrep_release_info.json.tag_name }}"
+    ripgrep_download_url: "https://github.com/BurntSushi/ripgrep/releases/download/{{ ripgrep_release_info.json.tag_name }}/ripgrep_{{ ripgrep_release_info.json.tag_name }}-1_amd64.deb"
+    ripgrep_filename: "ripgrep_{{ ripgrep_release_info.json.tag_name }}-1_amd64.deb"
+  tags:
+    - ripgrep
+
+- name: Ensure Downloads directory exists
+  file:
+    path: "/home/{{ ansible_user }}/Downloads"
+    state: directory
+    mode: '0755'
+  tags:
+    - ripgrep
+
+- name: Download latest ripgrep .deb package
+  get_url:
+    url: "{{ ripgrep_download_url }}"
+    dest: "/home/{{ ansible_user }}/Downloads/{{ ripgrep_filename }}"
+    mode: '0644'
+  tags:
+    - ripgrep
+
+- name: Install ripgrep package
+  apt:
+    deb: "/home/{{ ansible_user }}/Downloads/{{ ripgrep_filename }}"
+    state: present
+  become: yes
+  tags:
+    - ripgrep
+
+- name: Clean up downloaded .deb file
+  file:
+    path: "/home/{{ ansible_user }}/Downloads/{{ ripgrep_filename }}"
+    state: absent
+  tags:
+    - ripgrep

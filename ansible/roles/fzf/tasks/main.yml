@@ -1,0 +1,71 @@
+---
+# Tasks for fzf role
+
+- name: Get latest fzf release info
+  uri:
+    url: "https://api.github.com/repos/junegunn/fzf/releases/latest"
+    method: GET
+  register: fzf_release_info
+  tags:
+    - fzf
+
+- name: Set fzf version and download URL
+  set_fact:
+    fzf_version: "{{ fzf_release_info.json.tag_name }}"
+    fzf_download_url: "https://github.com/junegunn/fzf/releases/download/{{ fzf_release_info.json.tag_name }}/fzf-{{ fzf_release_info.json.tag_name | regex_replace('^v', '') }}-linux_amd64.tar.gz"
+    fzf_filename: "fzf-{{ fzf_release_info.json.tag_name | regex_replace('^v', '') }}-linux_amd64.tar.gz"
+  tags:
+    - fzf
+
+- name: Ensure Downloads directory exists
+  file:
+    path: "/home/{{ ansible_user }}/Downloads"
+    state: directory
+    mode: '0755'
+  tags:
+    - fzf
+
+- name: Download latest fzf tarball
+  get_url:
+    url: "{{ fzf_download_url }}"
+    dest: "/home/{{ ansible_user }}/Downloads/{{ fzf_filename }}"
+    mode: '0644'
+  tags:
+    - fzf
+
+- name: Extract fzf tarball
+  unarchive:
+    src: "/home/{{ ansible_user }}/Downloads/{{ fzf_filename }}"
+    dest: "/home/{{ ansible_user }}/Downloads"
+    remote_src: yes
+  tags:
+    - fzf
+
+- name: Ensure .local/bin directory exists
+  file:
+    path: "/home/{{ ansible_user }}/.local/bin"
+    state: directory
+    mode: '0755'
+  tags:
+    - fzf
+
+- name: Install fzf to .local/bin
+  copy:
+    src: "/home/{{ ansible_user }}/Downloads/fzf"
+    dest: "/home/{{ ansible_user }}/.local/bin/fzf"
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    remote_src: yes
+  tags:
+    - fzf
+
+- name: Clean up downloaded files
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "/home/{{ ansible_user }}/Downloads/{{ fzf_filename }}"
+    - "/home/{{ ansible_user }}/Downloads/fzf"
+  tags:
+    - fzf

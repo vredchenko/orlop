@@ -1,0 +1,3 @@
+---
+# Default variables for gdu role
+gdu_state: present
