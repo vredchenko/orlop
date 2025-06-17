@@ -129,4 +129,18 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+# Ansible
+*.retry
+.vault_pass
+vault/.vault_pass
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
 .idea/
+*.swp
+*.swo
+*~

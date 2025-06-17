@@ -1,9 +1,0 @@
-name: ripgrep
-desc: "ripgrep recursively searches directories for a regex pattern while respecting your gitignore "
-# used for latest release checking script:
-github:
-  - repo_owner: BurntSushi
-  - repo_name: ripgrep
-refs:
-  - repo: https://github.com/BurntSushi/ripgrep.git
-  - homepage: https://github.com/BurntSushi/ripgrep.git
