@@ -5,15 +5,25 @@
   uri:
     url: "https://api.github.com/repos/junegunn/fzf/releases/latest"
     method: GET
+    timeout: 30
+    validate_certs: yes
   register: fzf_release_info
+  retries: 3
+  delay: 5
+  failed_when: false
   tags:
     - fzf
 
-- name: Set fzf version and download URL
+- name: Set fzf version (from API or fallback)
   set_fact:
-    fzf_version: "{{ fzf_release_info.json.tag_name }}"
-    fzf_download_url: "https://github.com/junegunn/fzf/releases/download/{{ fzf_release_info.json.tag_name }}/fzf-{{ fzf_release_info.json.tag_name | regex_replace('^v', '') }}-linux_amd64.tar.gz"
-    fzf_filename: "fzf-{{ fzf_release_info.json.tag_name | regex_replace('^v', '') }}-linux_amd64.tar.gz"
+    fzf_version: "{{ fzf_release_info.json.tag_name if (fzf_release_info.status == 200) else 'v0.54.3' }}"
+  tags:
+    - fzf
+
+- name: Set fzf download URL and filename
+  set_fact:
+    fzf_download_url: "https://github.com/junegunn/fzf/releases/download/{{ fzf_version }}/fzf-{{ fzf_version | regex_replace('^v', '') }}-linux_amd64.tar.gz"
+    fzf_filename: "fzf-{{ fzf_version | regex_replace('^v', '') }}-linux_amd64.tar.gz"
   tags:
     - fzf
 
@@ -30,6 +40,18 @@
     url: "{{ fzf_download_url }}"
     dest: "/home/{{ ansible_user }}/Downloads/{{ fzf_filename }}"
     mode: '0644'
+    timeout: 120
+  retries: 3
+  delay: 10
+  register: fzf_download_result
+  failed_when: false
+  tags:
+    - fzf
+
+- name: Check if fzf download succeeded
+  stat:
+    path: "/home/{{ ansible_user }}/Downloads/{{ fzf_filename }}"
+  register: fzf_file_check
   tags:
     - fzf
 
@@ -38,6 +60,7 @@
     src: "/home/{{ ansible_user }}/Downloads/{{ fzf_filename }}"
     dest: "/home/{{ ansible_user }}/Downloads"
     remote_src: yes
+  when: fzf_file_check.stat.exists
   tags:
     - fzf
 
@@ -49,7 +72,7 @@
   tags:
     - fzf
 
-- name: Install fzf to .local/bin
+- name: Install fzf to .local/bin (from GitHub)
   copy:
     src: "/home/{{ ansible_user }}/Downloads/fzf"
     dest: "/home/{{ ansible_user }}/.local/bin/fzf"
@@ -57,6 +80,17 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     remote_src: yes
+  when: fzf_file_check.stat.exists
+  tags:
+    - fzf
+
+- name: Install fzf from system repositories (fallback)
+  apt:
+    name: fzf
+    state: present
+    update_cache: yes
+  become: yes
+  when: not fzf_file_check.stat.exists
   tags:
     - fzf
 
@@ -67,5 +101,6 @@
   loop:
     - "/home/{{ ansible_user }}/Downloads/{{ fzf_filename }}"
     - "/home/{{ ansible_user }}/Downloads/fzf"
+  when: fzf_file_check.stat.exists
   tags:
     - fzf

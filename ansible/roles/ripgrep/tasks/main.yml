@@ -5,15 +5,25 @@
   uri:
     url: "https://api.github.com/repos/BurntSushi/ripgrep/releases/latest"
     method: GET
+    timeout: 30
+    validate_certs: yes
   register: ripgrep_release_info
+  retries: 3
+  delay: 5
+  failed_when: false
   tags:
     - ripgrep
 
-- name: Set ripgrep version and download URL
+- name: Set ripgrep version (from API or fallback)
   set_fact:
-    ripgrep_version: "{{ ripgrep_release_info.json.tag_name }}"
-    ripgrep_download_url: "https://github.com/BurntSushi/ripgrep/releases/download/{{ ripgrep_release_info.json.tag_name }}/ripgrep_{{ ripgrep_release_info.json.tag_name }}-1_amd64.deb"
-    ripgrep_filename: "ripgrep_{{ ripgrep_release_info.json.tag_name }}-1_amd64.deb"
+    ripgrep_version: "{{ ripgrep_release_info.json.tag_name if (ripgrep_release_info.status == 200) else '14.1.0' }}"
+  tags:
+    - ripgrep
+
+- name: Set ripgrep download URL and filename
+  set_fact:
+    ripgrep_download_url: "https://github.com/BurntSushi/ripgrep/releases/download/{{ ripgrep_version }}/ripgrep_{{ ripgrep_version }}-1_amd64.deb"
+    ripgrep_filename: "ripgrep_{{ ripgrep_version }}-1_amd64.deb"
   tags:
     - ripgrep
 
@@ -30,14 +40,37 @@
     url: "{{ ripgrep_download_url }}"
     dest: "/home/{{ ansible_user }}/Downloads/{{ ripgrep_filename }}"
     mode: '0644'
+    timeout: 120
+  retries: 3
+  delay: 10
+  register: ripgrep_download_result
+  failed_when: false
   tags:
     - ripgrep
 
-- name: Install ripgrep package
+- name: Check if ripgrep download succeeded
+  stat:
+    path: "/home/{{ ansible_user }}/Downloads/{{ ripgrep_filename }}"
+  register: ripgrep_file_check
+  tags:
+    - ripgrep
+
+- name: Install ripgrep from GitHub release
   apt:
     deb: "/home/{{ ansible_user }}/Downloads/{{ ripgrep_filename }}"
     state: present
   become: yes
+  when: ripgrep_file_check.stat.exists
+  tags:
+    - ripgrep
+
+- name: Install ripgrep from system repositories (fallback)
+  apt:
+    name: ripgrep
+    state: present
+    update_cache: yes
+  become: yes
+  when: not ripgrep_file_check.stat.exists
   tags:
     - ripgrep
 
@@ -45,5 +78,6 @@
   file:
     path: "/home/{{ ansible_user }}/Downloads/{{ ripgrep_filename }}"
     state: absent
+  when: ripgrep_file_check.stat.exists
   tags:
     - ripgrep
