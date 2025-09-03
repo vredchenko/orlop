@@ -1,0 +1,123 @@
+---
+# Tasks for gh (GitHub CLI) role
+
+- name: Get latest gh release info
+  uri:
+    url: "https://api.github.com/repos/cli/cli/releases/latest"
+    method: GET
+    timeout: 30
+    validate_certs: yes
+  register: gh_release_info
+  retries: 3
+  delay: 5
+  failed_when: false
+  tags:
+    - gh
+
+- name: Set gh version (from API or fallback)
+  set_fact:
+    gh_version: "{{ gh_release_info.json.tag_name if (gh_release_info.status == 200) else 'v2.40.1' }}"
+  tags:
+    - gh
+
+- name: Set gh download URL and filename
+  set_fact:
+    gh_download_url: "https://github.com/cli/cli/releases/download/{{ gh_version }}/gh_{{ gh_version | regex_replace('^v', '') }}_linux_amd64.deb"
+    gh_filename: "gh_{{ gh_version | regex_replace('^v', '') }}_linux_amd64.deb"
+  tags:
+    - gh
+
+- name: Ensure Downloads directory exists
+  file:
+    path: "/home/{{ ansible_user }}/Downloads"
+    state: directory
+    mode: '0755'
+  tags:
+    - gh
+
+- name: Download latest gh .deb package
+  get_url:
+    url: "{{ gh_download_url }}"
+    dest: "/home/{{ ansible_user }}/Downloads/{{ gh_filename }}"
+    mode: '0644'
+    timeout: 120
+  retries: 3
+  delay: 10
+  register: gh_download_result
+  failed_when: false
+  tags:
+    - gh
+
+- name: Check if gh download succeeded
+  stat:
+    path: "/home/{{ ansible_user }}/Downloads/{{ gh_filename }}"
+  register: gh_file_check
+  tags:
+    - gh
+
+- name: Install gh from GitHub release
+  apt:
+    deb: "/home/{{ ansible_user }}/Downloads/{{ gh_filename }}"
+    state: present
+  become: yes
+  when: gh_file_check.stat.exists
+  tags:
+    - gh
+
+- name: Install gh from official repository (fallback)
+  block:
+    - name: Add GitHub CLI repository key
+      get_url:
+        url: "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
+        dest: "/tmp/githubcli-archive-keyring.gpg"
+      become: yes
+
+    - name: Install GitHub CLI repository key
+      shell: |
+        cat /tmp/githubcli-archive-keyring.gpg | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
+        chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+      become: yes
+
+    - name: Add GitHub CLI repository
+      apt_repository:
+        repo: "deb [arch={{ ansible_architecture }} signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main"
+        state: present
+      become: yes
+
+    - name: Install gh from official repository
+      apt:
+        name: gh
+        state: present
+        update_cache: yes
+      become: yes
+
+    - name: Clean up temporary key file
+      file:
+        path: "/tmp/githubcli-archive-keyring.gpg"
+        state: absent
+      become: yes
+  when: not gh_file_check.stat.exists
+  tags:
+    - gh
+
+- name: Verify gh installation
+  command: gh --version
+  register: gh_version_check
+  changed_when: false
+  failed_when: gh_version_check.rc != 0
+  tags:
+    - gh
+
+- name: Display gh version
+  debug:
+    msg: "Installed gh version: {{ gh_version_check.stdout }}"
+  tags:
+    - gh
+
+- name: Clean up downloaded .deb file
+  file:
+    path: "/home/{{ ansible_user }}/Downloads/{{ gh_filename }}"
+    state: absent
+  when: gh_file_check.stat.exists
+  tags:
+    - gh

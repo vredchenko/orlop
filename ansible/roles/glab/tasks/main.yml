@@ -1,0 +1,111 @@
+---
+# Tasks for glab (GitLab CLI) role
+
+- name: Get latest glab release info
+  uri:
+    url: "https://api.github.com/repos/profclems/glab/releases/latest"
+    method: GET
+    timeout: 30
+    validate_certs: yes
+  register: glab_release_info
+  retries: 3
+  delay: 5
+  failed_when: false
+  tags:
+    - glab
+
+- name: Set glab version (from API or fallback)
+  set_fact:
+    glab_version: "{{ glab_release_info.json.tag_name if (glab_release_info.status == 200) else 'v1.36.0' }}"
+  tags:
+    - glab
+
+- name: Set glab download URL and filename
+  set_fact:
+    glab_download_url: "https://github.com/profclems/glab/releases/download/{{ glab_version }}/glab_{{ glab_version | regex_replace('^v', '') }}_Linux_x86_64.deb"
+    glab_filename: "glab_{{ glab_version | regex_replace('^v', '') }}_Linux_x86_64.deb"
+  tags:
+    - glab
+
+- name: Ensure Downloads directory exists
+  file:
+    path: "/home/{{ ansible_user }}/Downloads"
+    state: directory
+    mode: '0755'
+  tags:
+    - glab
+
+- name: Download latest glab .deb package
+  get_url:
+    url: "{{ glab_download_url }}"
+    dest: "/home/{{ ansible_user }}/Downloads/{{ glab_filename }}"
+    mode: '0644'
+    timeout: 120
+  retries: 3
+  delay: 10
+  register: glab_download_result
+  failed_when: false
+  tags:
+    - glab
+
+- name: Check if glab download succeeded
+  stat:
+    path: "/home/{{ ansible_user }}/Downloads/{{ glab_filename }}"
+  register: glab_file_check
+  tags:
+    - glab
+
+- name: Install glab from GitHub release
+  apt:
+    deb: "/home/{{ ansible_user }}/Downloads/{{ glab_filename }}"
+    state: present
+  become: yes
+  when: glab_file_check.stat.exists
+  tags:
+    - glab
+
+- name: Install glab from system repositories (fallback)
+  block:
+    - name: Add GitLab repository key
+      apt_key:
+        url: "https://gitlab.com/api/v4/projects/34675721/packages/debian/repository/gitlab-glab/key.gpg"
+        state: present
+      become: yes
+
+    - name: Add GitLab repository
+      apt_repository:
+        repo: "deb https://gitlab.com/api/v4/projects/34675721/packages/debian/repository/gitlab-glab {{ ansible_distribution_release }} main"
+        state: present
+      become: yes
+
+    - name: Install glab from GitLab repository
+      apt:
+        name: glab
+        state: present
+        update_cache: yes
+      become: yes
+  when: not glab_file_check.stat.exists
+  tags:
+    - glab
+
+- name: Verify glab installation
+  command: glab --version
+  register: glab_version_check
+  changed_when: false
+  failed_when: glab_version_check.rc != 0
+  tags:
+    - glab
+
+- name: Display glab version
+  debug:
+    msg: "Installed glab version: {{ glab_version_check.stdout }}"
+  tags:
+    - glab
+
+- name: Clean up downloaded .deb file
+  file:
+    path: "/home/{{ ansible_user }}/Downloads/{{ glab_filename }}"
+    state: absent
+  when: glab_file_check.stat.exists
+  tags:
+    - glab

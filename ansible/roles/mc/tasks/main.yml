@@ -1,0 +1,160 @@
+---
+# Tasks for mc (MinIO Client) role
+
+- name: Get latest mc release info
+  uri:
+    url: "https://api.github.com/repos/minio/mc/releases/latest"
+    method: GET
+    timeout: 30
+    validate_certs: yes
+  register: mc_release_info
+  retries: 3
+  delay: 5
+  failed_when: false
+  tags:
+    - mc
+
+- name: Set mc version (from API or fallback)
+  set_fact:
+    mc_version: "{{ mc_release_info.json.tag_name if (mc_release_info.status == 200) else 'RELEASE.2024-01-13T08-44-48Z' }}"
+  tags:
+    - mc
+
+- name: Set mc download URL and filename
+  set_fact:
+    mc_download_url: "https://dl.min.io/client/mc/release/linux-amd64/mc"
+    mc_filename: "mc"
+  tags:
+    - mc
+
+- name: Ensure Downloads directory exists
+  file:
+    path: "/home/{{ ansible_user }}/Downloads"
+    state: directory
+    mode: '0755'
+  tags:
+    - mc
+
+- name: Download latest mc binary
+  get_url:
+    url: "{{ mc_download_url }}"
+    dest: "/home/{{ ansible_user }}/Downloads/{{ mc_filename }}"
+    mode: '0755'
+    timeout: 120
+  retries: 3
+  delay: 10
+  register: mc_download_result
+  failed_when: false
+  tags:
+    - mc
+
+- name: Check if mc download succeeded
+  stat:
+    path: "/home/{{ ansible_user }}/Downloads/{{ mc_filename }}"
+  register: mc_file_check
+  tags:
+    - mc
+
+- name: Ensure .local/bin directory exists
+  file:
+    path: "/home/{{ ansible_user }}/.local/bin"
+    state: directory
+    mode: '0755'
+  tags:
+    - mc
+
+- name: Install mc to .local/bin (from download)
+  copy:
+    src: "/home/{{ ansible_user }}/Downloads/{{ mc_filename }}"
+    dest: "/home/{{ ansible_user }}/.local/bin/mc"
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    remote_src: yes
+  when: mc_file_check.stat.exists
+  tags:
+    - mc
+
+- name: Install mc globally (from download)
+  copy:
+    src: "/home/{{ ansible_user }}/Downloads/{{ mc_filename }}"
+    dest: "/usr/local/bin/mc"
+    mode: '0755'
+    owner: root
+    group: root
+    remote_src: yes
+  become: yes
+  when: mc_file_check.stat.exists
+  tags:
+    - mc
+
+- name: Install mc from package manager (fallback)
+  block:
+    - name: Download mc installation script
+      get_url:
+        url: "https://dl.min.io/client/mc/release/linux-amd64/mc"
+        dest: "/tmp/mc"
+        mode: '0755'
+      become: yes
+
+    - name: Install mc to /usr/local/bin
+      copy:
+        src: "/tmp/mc"
+        dest: "/usr/local/bin/mc"
+        mode: '0755'
+        owner: root
+        group: root
+        remote_src: yes
+      become: yes
+
+    - name: Clean up temporary mc binary
+      file:
+        path: "/tmp/mc"
+        state: absent
+      become: yes
+  when: not mc_file_check.stat.exists
+  tags:
+    - mc
+
+- name: Add .local/bin to PATH in bashrc
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: 'export PATH="$HOME/.local/bin:$PATH"'
+    create: yes
+    backup: yes
+  tags:
+    - mc
+
+- name: Verify mc installation
+  command: mc --version
+  register: mc_version_check
+  changed_when: false
+  failed_when: mc_version_check.rc != 0
+  environment:
+    PATH: "/home/{{ ansible_user }}/.local/bin:{{ ansible_env.PATH }}"
+  tags:
+    - mc
+
+- name: Display mc version
+  debug:
+    msg: "Installed mc version: {{ mc_version_check.stdout }}"
+  tags:
+    - mc
+
+- name: Clean up downloaded binary
+  file:
+    path: "/home/{{ ansible_user }}/Downloads/{{ mc_filename }}"
+    state: absent
+  when: mc_file_check.stat.exists
+  tags:
+    - mc
+
+- name: Create mc configuration directory
+  file:
+    path: "/home/{{ ansible_user }}/.mc"
+    state: directory
+    mode: '0700'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  tags:
+    - mc
