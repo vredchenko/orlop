@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Ansible project scaffolding script
 # Creates a new Ansible project structure with specified roles
