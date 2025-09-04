@@ -137,9 +137,8 @@ RUN HYPERFINE_VERSION=$(curl -s https://api.github.com/repos/sharkdp/hyperfine/r
 
 # Install procs (process viewer)
 RUN PROCS_VERSION=$(curl -s https://api.github.com/repos/dalance/procs/releases/latest | jq -r .tag_name) && \
-    PROCS_VERSION_CLEAN=$(echo $PROCS_VERSION | sed 's/^v//') && \
     echo "Installing procs $PROCS_VERSION" && \
-    curl -L "https://github.com/dalance/procs/releases/download/$PROCS_VERSION/procs-${PROCS_VERSION_CLEAN}-x86_64-linux.zip" -o procs.zip && \
+    curl -L "https://github.com/dalance/procs/releases/download/$PROCS_VERSION/procs-${PROCS_VERSION}-x86_64-linux.zip" -o procs.zip && \
     unzip procs.zip -d /usr/local/bin/ && \
     rm procs.zip
 
