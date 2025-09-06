@@ -20,7 +20,7 @@ on:
       platforms:
         description: "Target platforms"
         required: true
-        default: "linux/amd64,linux/arm64"
+        default: "linux/amd64"
         type: string
       registry:
         description: "Container registry"
@@ -92,7 +92,7 @@ jobs:
         with:
           context: .
           file: ${{ inputs.dockerfile || 'Dockerfile' }}
-          platforms: ${{ inputs.platforms || 'linux/amd64,linux/arm64' }}
+          platforms: ${{ inputs.platforms || 'linux/amd64' }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
