@@ -158,12 +158,11 @@ RUN BOTTOM_VERSION=$(curl -s https://api.github.com/repos/ClementTsang/bottom/re
 
 # Install dust (disk usage analyzer)
 RUN DUST_VERSION=$(curl -s https://api.github.com/repos/bootandy/dust/releases/latest | jq -r .tag_name) && \
-    DUST_VERSION_CLEAN=$(echo $DUST_VERSION | sed 's/^v//') && \
     echo "Installing dust $DUST_VERSION" && \
-    curl -L "https://github.com/bootandy/dust/releases/download/$DUST_VERSION/dust-${DUST_VERSION_CLEAN}-x86_64-unknown-linux-gnu.tar.gz" -o dust.tar.gz && \
+    curl -L "https://github.com/bootandy/dust/releases/download/$DUST_VERSION/dust-${DUST_VERSION}-x86_64-unknown-linux-gnu.tar.gz" -o dust.tar.gz && \
     tar -xzf dust.tar.gz && \
-    mv dust-${DUST_VERSION_CLEAN}-x86_64-unknown-linux-gnu/dust /usr/local/bin/ && \
-    rm -rf dust.tar.gz dust-${DUST_VERSION_CLEAN}-x86_64-unknown-linux-gnu
+    mv dust-${DUST_VERSION}-x86_64-unknown-linux-gnu/dust /usr/local/bin/ && \
+    rm -rf dust.tar.gz dust-${DUST_VERSION}-x86_64-unknown-linux-gnu
 
 # Install GitLab CLI (glab)
 RUN GLAB_VERSION=$(curl -s https://api.github.com/repos/profclems/glab/releases/latest | jq -r .tag_name) && \
