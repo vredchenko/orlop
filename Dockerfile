@@ -143,8 +143,7 @@ RUN PROCS_VERSION=$(curl -s https://api.github.com/repos/dalance/procs/releases/
     rm procs.zip
 
 # Install tokei (code statistics)
-RUN TOKEI_VERSION=$(curl -s https://api.github.com/repos/XAMPPRocky/tokei/releases/latest | jq -r .tag_name) && \
-    TOKEI_VERSION_CLEAN=$(echo $TOKEI_VERSION | sed 's/^v//') && \
+RUN TOKEI_VERSION="v12.1.2" && \
     echo "Installing tokei $TOKEI_VERSION" && \
     curl -L "https://github.com/XAMPPRocky/tokei/releases/download/$TOKEI_VERSION/tokei-x86_64-unknown-linux-gnu.tar.gz" -o tokei.tar.gz && \
     tar -xzf tokei.tar.gz -C /usr/local/bin/ && \
