@@ -38,17 +38,57 @@ All tools are installed from their latest GitHub releases and work identically i
 - **dust** - Alternative disk usage analyzer (TODO: Add to Ansible)
 - **mc** - MinIO/S3 client
 
-## Quick Start
+## 🚀 Quick Start
+
+### Using Pre-built Container (Recommended)
+
+The easiest way to get started is using the pre-built container from GitHub Container Registry:
 
 ```bash
-# Build container
-make build
+# Pull the latest container image
+docker pull ghcr.io/vredchenko/orlop/omni:latest
 
-# Test container
-make test
+# Run interactive shell with all tools available
+docker run --rm -it ghcr.io/vredchenko/orlop/omni:latest
 
-# Run interactive shell
-make shell
+# Use tools with your current directory mounted
+docker run --rm -it -v "$PWD:/workspace" -w /workspace ghcr.io/vredchenko/orlop/omni:latest
+
+# Run individual tools directly
+docker run --rm -v "$PWD:/workspace" ghcr.io/vredchenko/orlop/omni:latest rg "search-pattern" /workspace
+docker run --rm -v "$PWD:/workspace" ghcr.io/vredchenko/orlop/omni:latest bat /workspace/README.md
+docker run --rm -v "$PWD:/workspace" ghcr.io/vredchenko/orlop/omni:latest fd "*.py" /workspace
+```
+
+### Common Usage Patterns
+
+```bash
+# Interactive shell for development work
+docker run --rm -it -v "$PWD:/workspace" -w /workspace ghcr.io/vredchenko/orlop/omni:latest
+
+# Search across your codebase
+docker run --rm -v "$PWD:/workspace" ghcr.io/vredchenko/orlop/omni:latest rg "TODO" /workspace
+
+# View file with syntax highlighting
+docker run --rm -v "$PWD:/workspace" ghcr.io/vredchenko/orlop/omni:latest bat /workspace/src/main.py
+
+# Analyze disk usage
+docker run --rm -v "$PWD:/workspace" ghcr.io/vredchenko/orlop/omni:latest gdu /workspace
+
+# Find files quickly
+docker run --rm -v "$PWD:/workspace" ghcr.io/vredchenko/orlop/omni:latest fd "\.py$" /workspace
+```
+
+### Building Locally
+
+If you prefer to build the container yourself:
+
+```bash
+# Build container locally
+./scripts/docker-build.sh
+
+# Run your local build
+docker run --rm -it orlopdeck:latest
 ```
 
 ## Build System
@@ -124,4 +164,9 @@ Automated builds are triggered on:
 - Version tags
 - Main branch pushes
 
-Multi-platform builds (amd64/arm64) are published to GitHub Container Registry.
+Container images are published to [GitHub Container Registry](https://github.com/vredchenko/orlop/pkgs/container/omni) with support for `linux/amd64` architecture.
+
+**Available Tags:**
+- `ghcr.io/vredchenko/orlop/omni:latest` - Latest build from main branch
+- `ghcr.io/vredchenko/orlop/omni:YYYY-MM-DD-<commit>` - Date-based tags
+- `ghcr.io/vredchenko/orlop/omni:<version>` - Semantic version tags
