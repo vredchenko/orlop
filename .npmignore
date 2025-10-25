@@ -1,0 +1,47 @@
+# Source files
+src/
+tsconfig.json
+tsup.config.ts
+
+# Tests
+*.test.ts
+*.test.js
+__tests__/
+coverage/
+
+# Development
+.vscode/
+.idea/
+*.log
+*.env
+
+# Ansible
+ansible/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Scripts (bash)
+scripts/docker-build.sh
+scripts/version.sh
+scripts/scaffold-ansible-project.sh
+
+# Build tools
+Makefile
+
+# CI/CD (keep only npm-publish workflow in package)
+.github/workflows/build-and-publish.yml
+.github/workflows/release-build.yml
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Binaries (downloaded on postinstall)
+bin/
+
+# Documentation (use README.npm.md)
+README.md
