@@ -144,3 +144,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Orlop npm package
+bin/                    # Downloaded binaries
+dist/                   # TypeScript compiled output

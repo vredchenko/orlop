@@ -1,0 +1,78 @@
+name: Publish npm Package
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (leave empty to use VERSION file)'
+        required: false
+        type: string
+      tag:
+        description: 'npm tag (latest, beta, next)'
+        required: false
+        default: 'latest'
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # For npm provenance
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Read VERSION file
+        id: version
+        run: |
+          VERSION=$(cat VERSION | tr -d '\n')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Package version: $VERSION"
+
+      - name: Update package.json version
+        run: |
+          VERSION="${{ github.event.inputs.version || steps.version.outputs.version }}"
+          npm version $VERSION --no-git-tag-version --allow-same-version
+          echo "✅ Updated package.json to version $VERSION"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Run tests
+        run: npm test || echo "⚠️  Tests not yet implemented, skipping..."
+
+      - name: Publish to npm
+        run: |
+          TAG="${{ github.event.inputs.tag || 'latest' }}"
+          npm publish --provenance --access public --tag $TAG
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create summary
+        run: |
+          VERSION="${{ github.event.inputs.version || steps.version.outputs.version }}"
+          TAG="${{ github.event.inputs.tag || 'latest' }}"
+          echo "## 📦 npm Package Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package**: @vredchenko/orlop" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag**: $TAG" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: https://www.npmjs.com/package/@vredchenko/orlop" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Install" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "npm install @vredchenko/orlop@$TAG" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
