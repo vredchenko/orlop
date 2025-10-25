@@ -1,0 +1,115 @@
+{
+  "name": "@vredchenko/orlop",
+  "version": "0.1.0",
+  "description": "Modern CLI development tools with Node.js wrapper - batteries included",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "bin": {
+    "orlop": "dist/cli.js",
+    "orlop-rg": "dist/bin-wrapper.js",
+    "orlop-bat": "dist/bin-wrapper.js",
+    "orlop-fd": "dist/bin-wrapper.js",
+    "orlop-delta": "dist/bin-wrapper.js",
+    "orlop-lsd": "dist/bin-wrapper.js",
+    "orlop-gdu": "dist/bin-wrapper.js",
+    "orlop-fzf": "dist/bin-wrapper.js",
+    "orlop-starship": "dist/bin-wrapper.js",
+    "orlop-tokei": "dist/bin-wrapper.js",
+    "orlop-hexyl": "dist/bin-wrapper.js",
+    "orlop-hyperfine": "dist/bin-wrapper.js",
+    "orlop-procs": "dist/bin-wrapper.js",
+    "orlop-gron": "dist/bin-wrapper.js",
+    "orlop-glab": "dist/bin-wrapper.js",
+    "orlop-gh": "dist/bin-wrapper.js",
+    "orlop-dust": "dist/bin-wrapper.js",
+    "orlop-mc": "dist/bin-wrapper.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./zx": {
+      "types": "./dist/zx/index.d.ts",
+      "import": "./dist/zx/index.js",
+      "require": "./dist/zx/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsc && tsup",
+    "postinstall": "test -f dist/scripts/postinstall.js && node dist/scripts/postinstall.js || echo 'Skipping postinstall (development mode)'",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "prepare": "npm run build || true",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "cli",
+    "tools",
+    "ripgrep",
+    "bat",
+    "fd",
+    "delta",
+    "lsd",
+    "gdu",
+    "fzf",
+    "starship",
+    "tokei",
+    "hexyl",
+    "hyperfine",
+    "procs",
+    "gron",
+    "glab",
+    "gh",
+    "dust",
+    "minio",
+    "development",
+    "devtools",
+    "rust-tools"
+  ],
+  "author": "vredchenko",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vredchenko/orlop.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vredchenko/orlop/issues"
+  },
+  "homepage": "https://github.com/vredchenko/orlop#readme",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "dist",
+    "bin",
+    "README.npm.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "execa": "^8.0.1",
+    "zx": "^7.2.3",
+    "node-fetch": "^3.3.2",
+    "tar": "^6.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/tar": "^6.1.11",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "eslint": "^8.56.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
