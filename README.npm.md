@@ -138,18 +138,20 @@ await stream;
 
 ```typescript
 #!/usr/bin/env zx
-import '@vredchenko/orlop/zx'; // Adds binaries to PATH
-import { $ } from 'zx';
+import { rg, bat, fd, tokei, toolPaths, $ } from '@vredchenko/orlop/zx';
 
-// All orlop tools now available
-const todos = await $`rg "TODO" ./src`;
+// Use direct tool functions (recommended - fully sandboxed)
+const todos = await rg('TODO', './src');
 console.log(todos.stdout);
 
-const files = await $`fd "\\.ts$" ./src`;
+const files = await fd('\\.ts$', './src');
 console.log(files.stdout);
 
-const stats = await $`tokei ./src --output json`;
+const stats = await tokei('./src', '--output', 'json');
 const data = JSON.parse(stats.stdout);
+
+// Or use toolPaths with zx $ for complex commands
+await $`${toolPaths.ripgrep} "pattern" ./src | ${toolPaths.gron}`;
 ```
 
 ### Using with scripts
