@@ -1,105 +1,79 @@
 /**
  * zx integration for @vredchenko/orlop
  *
- * Provides direct tool executors for zx scripts using absolute paths.
- * No PATH modification - fully sandboxed to avoid conflicts with system tools.
+ * Import this module to automatically add orlop binaries to PATH for zx scripts.
  *
  * @example
  * ```typescript
  * #!/usr/bin/env zx
- * import { rg, bat, fd, $ } from '@vredchenko/orlop/zx';
+ * import '@vredchenko/orlop/zx';
+ * import { $ } from 'zx';
  *
- * // Use direct tool functions (recommended)
- * await rg('TODO', './src');
- * await bat('README.md');
- *
- * // Or use toolPaths with zx $
- * import { toolPaths } from '@vredchenko/orlop/zx';
- * await $`${toolPaths.ripgrep} "TODO" ./src`;
+ * // All orlop tools now available in zx
+ * const files = await $`rg "TODO" ./src`;
+ * const content = await $`bat README.md`;
  * ```
  */
 
-import { getAllToolPaths } from '../utils/paths.js';
+import { getBinDir, getAllToolPaths } from '../utils/paths.js';
 import { $ } from 'zx';
 
-// Export $ from zx for convenience
+// Add orlop bin directory to PATH
+const binDir = getBinDir();
+const currentPath = process.env.PATH || '';
+
+if (!currentPath.includes(binDir)) {
+  process.env.PATH = `${binDir}:${currentPath}`;
+}
+
+// Export enhanced $ with orlop tools in PATH
 export { $ };
 
 // Export tool paths for direct access
 export const toolPaths = getAllToolPaths();
 
+// Export utility to get binary directory
+export { getBinDir };
+
 /**
- * Create a zx-compatible executor for a specific tool
+ * Create a tagged template for a specific orlop tool
  */
-function createToolExecutor(toolPath: string) {
-  return async (...args: (string | number | boolean)[]) => {
-    const stringArgs = args.map(arg => String(arg));
-    return $`${toolPath} ${stringArgs}`;
+export function createToolTemplate(toolBinary: string) {
+  return async (strings: TemplateStringsArray, ...values: any[]) => {
+    const command = strings.reduce((acc, str, i) => {
+      return acc + str + (values[i] !== undefined ? String(values[i]) : '');
+    }, '');
+
+    return $`${toolBinary} ${command}`;
   };
 }
 
-// Create direct executors for all tools (using absolute paths)
-export const rg = createToolExecutor(toolPaths.ripgrep);
-export const ripgrep = rg;
-
-export const bat = createToolExecutor(toolPaths.bat);
-
-export const fd = createToolExecutor(toolPaths.fd);
-
-export const delta = createToolExecutor(toolPaths.delta);
-
-export const lsd = createToolExecutor(toolPaths.lsd);
-
-export const gdu = createToolExecutor(toolPaths.gdu);
-
-export const fzf = createToolExecutor(toolPaths.fzf);
-
-export const starship = createToolExecutor(toolPaths.starship);
-
-export const tokei = createToolExecutor(toolPaths.tokei);
-
-export const hexyl = createToolExecutor(toolPaths.hexyl);
-
-export const hyperfine = createToolExecutor(toolPaths.hyperfine);
-
-export const procs = createToolExecutor(toolPaths.procs);
-
-export const gron = createToolExecutor(toolPaths.gron);
-
-export const glab = createToolExecutor(toolPaths.glab);
-
-export const gh = createToolExecutor(toolPaths.gh);
-
-export const dust = createToolExecutor(toolPaths.dust);
-
-export const mc = createToolExecutor(toolPaths.mc);
+// Create convenience tagged templates for common tools
+export const rg = createToolTemplate('rg');
+export const bat = createToolTemplate('bat');
+export const fd = createToolTemplate('fd');
+export const lsd = createToolTemplate('lsd');
+export const gdu = createToolTemplate('gdu');
+export const tokei = createToolTemplate('tokei');
+export const dust = createToolTemplate('dust');
 
 /**
- * Helper object with all orlop tools
+ * Helper to run orlop tools with zx
  */
 export const orlop = {
   rg,
-  ripgrep,
   bat,
   fd,
-  delta,
   lsd,
   gdu,
-  fzf,
-  starship,
   tokei,
-  hexyl,
-  hyperfine,
-  procs,
-  gron,
-  glab,
-  gh,
   dust,
-  mc,
   /**
-   * Get absolute path for any tool
+   * Run any orlop tool
    */
-  path: (toolName: keyof typeof toolPaths) => toolPaths[toolName],
+  run: async (tool: string, ...args: string[]) => {
+    return $`${tool} ${args}`;
+  },
 };
 
 // Set verbose mode for debugging (optional)
