@@ -11,17 +11,11 @@ https://en.wikipedia.org/wiki/Orlop_deck
 
 Orlop Deck provides modern CLI tools for development and system administration in three ways:
 
-1. **npm Package** (`@vredchenko/orlop`) - Node.js/TypeScript wrapper with automatic binary installation (fully sandboxed - no conflicts with system tools)
+1. **npm Package** - Node.js/TypeScript wrapper with automatic binary installation
 2. **Ansible Playbook** - Install tools directly on host systems
 3. **Docker Container** - Package tools in an isolated container
 
 All tools are installed from their latest GitHub releases and work identically across all distribution methods.
-
-**npm Package Features:**
-- ✅ Fully sandboxed using absolute paths - zero conflicts with system tools
-- ✅ TypeScript/JavaScript API with async/await
-- ✅ zx scripting integration
-- ✅ See [README.npm.md](README.npm.md) for full npm documentation
 
 ## Included Tools
 
