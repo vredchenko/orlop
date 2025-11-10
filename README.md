@@ -9,13 +9,12 @@ https://en.wikipedia.org/wiki/Orlop_deck
 
 ## Overview
 
-Orlop Deck provides modern CLI tools for development and system administration in three ways:
+Orlop Deck provides modern CLI tools for development and system administration in two ways:
 
-1. **npm Package** - Node.js/TypeScript wrapper with automatic binary installation
-2. **Ansible Playbook** - Install tools directly on host systems
-3. **Docker Container** - Package tools in an isolated container
+1. **Ansible Playbook** - Install tools directly on host systems
+2. **Docker Container** - Package tools in an isolated container
 
-All tools are installed from their latest GitHub releases and work identically across all distribution methods.
+All tools are installed from their latest GitHub releases and work identically in both environments.
 
 ## Included Tools
 
@@ -41,28 +40,7 @@ All tools are installed from their latest GitHub releases and work identically a
 
 ## 🚀 Quick Start
 
-### Using npm Package (Easiest)
-
-Install as an npm module with TypeScript/JavaScript API:
-
-```bash
-# Install package
-npm install @vredchenko/orlop
-
-# Use via npx (no global install needed)
-npx @vredchenko/orlop rg "pattern" ./src
-npx @vredchenko/orlop bat README.md
-
-# Or use the Node.js API
-import { ripgrep, bat, fd } from '@vredchenko/orlop';
-const results = await ripgrep('TODO', { cwd: './src' });
-```
-
-**Documentation**: See [npm package README](./README.npm.md) for full API documentation.
-
-**npm Registry**: https://www.npmjs.com/package/@vredchenko/orlop
-
-### Using Pre-built Container
+### Using Pre-built Container (Recommended)
 
 The easiest way to get started is using the pre-built container from GitHub Container Registry:
 
@@ -122,30 +100,7 @@ docker run --rm -it orlopdeck:latest
 
 ## Installation Methods
 
-### Method 1: npm Package (Node.js/TypeScript)
-
-Install as an npm module for use in Node.js projects or scripts:
-
-```bash
-# Local installation
-npm install @vredchenko/orlop
-
-# Global installation
-npm install -g @vredchenko/orlop
-
-# Use via npx (no installation)
-npx @vredchenko/orlop rg "pattern"
-```
-
-**Features:**
-- TypeScript/JavaScript API with async/await
-- Built-in zx scripting support
-- Automatic binary downloads during installation
-- Full type definitions included
-
-See [README.npm.md](./README.npm.md) for complete documentation.
-
-### Method 2: Ansible (Direct Host Installation)
+### Method 1: Ansible (Direct Host Installation)
 Install tools directly on your system or remote hosts:
 
 ```bash
@@ -157,7 +112,7 @@ ansible all -i inventory/hosts.yml -m ping
 ansible-playbook -i inventory/hosts.yml playbooks/site.yml
 ```
 
-### Method 3: Container (Isolated Environment)
+### Method 2: Container (Isolated Environment)
 Use tools in an isolated container:
 
 ```bash
@@ -207,9 +162,7 @@ make release
 Automated builds are triggered on:
 - Manual workflow dispatch
 - Version tags
-- GitHub releases
-
-### Docker Container Registry
+- Main branch pushes
 
 Container images are published to [GitHub Container Registry](https://github.com/vredchenko/orlop/pkgs/container/omni) with support for `linux/amd64` architecture.
 
@@ -217,14 +170,3 @@ Container images are published to [GitHub Container Registry](https://github.com
 - `ghcr.io/vredchenko/orlop/omni:latest` - Latest build from main branch
 - `ghcr.io/vredchenko/orlop/omni:YYYY-MM-DD-<commit>` - Date-based tags
 - `ghcr.io/vredchenko/orlop/omni:<version>` - Semantic version tags
-
-### npm Registry
-
-npm packages are published to [npmjs.com](https://www.npmjs.com/package/@vredchenko/orlop) on GitHub releases.
-
-**Installation:**
-```bash
-npm install @vredchenko/orlop
-```
-
-Both Docker and npm use the same version from the `VERSION` file for consistency.
