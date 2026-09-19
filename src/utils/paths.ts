@@ -1,15 +1,28 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { getPlatformKey } from './platform.js';
+import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
  * Get the root directory of the package
+ * Searches upward for package.json to find the actual package root
  */
 export function getPackageRoot(): string {
-  // From src/utils/paths.ts, go up to package root
+  let currentDir = __dirname;
+
+  // Search upward for package.json
+  while (currentDir !== path.dirname(currentDir)) {
+    const packageJsonPath = path.join(currentDir, 'package.json');
+    if (existsSync(packageJsonPath)) {
+      return currentDir;
+    }
+    currentDir = path.dirname(currentDir);
+  }
+
+  // Fallback to the old behavior if package.json not found
   return path.resolve(__dirname, '../..');
 }
 

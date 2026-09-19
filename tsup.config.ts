@@ -1,4 +1,6 @@
 import { defineConfig } from 'tsup';
+import { copyFileSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
 
 export default defineConfig({
   entry: {
@@ -15,4 +17,12 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   shims: true,
+  onSuccess: async () => {
+    // Copy tools-metadata.json to dist
+    const src = 'src/scripts/tools-metadata.json';
+    const dest = 'dist/scripts/tools-metadata.json';
+    mkdirSync(dirname(dest), { recursive: true });
+    copyFileSync(src, dest);
+    console.log('Copied tools-metadata.json to dist/scripts/');
+  },
 });

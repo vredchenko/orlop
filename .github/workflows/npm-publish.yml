@@ -54,12 +54,12 @@ jobs:
       - name: Run tests
         run: npm test || echo "⚠️  Tests not yet implemented, skipping..."
 
-      - name: Publish to npm
+      - name: Publish to npm with Trusted Publishers (OIDC)
         run: |
           TAG="${{ github.event.inputs.tag || 'latest' }}"
-          npm publish --provenance --access public --tag $TAG
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          npm publish --access public --tag $TAG
+        # Provenance is automatic with trusted publishers
+        # No NODE_AUTH_TOKEN needed - uses OIDC via id-token permission
 
       - name: Create summary
         run: |

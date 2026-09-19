@@ -2,7 +2,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createWriteStream } from 'fs';
+import { createWriteStream, existsSync } from 'fs';
 import { pipeline } from 'stream/promises';
 import fetch from 'node-fetch';
 import tar from 'tar';
@@ -24,6 +24,22 @@ interface ToolMetadata {
 }
 
 const TOOLS: Record<string, ToolMetadata> = toolsMetadata as any;
+
+function getPackageRoot(): string {
+  let currentDir = __dirname;
+
+  // Search upward for package.json
+  while (currentDir !== path.dirname(currentDir)) {
+    const packageJsonPath = path.join(currentDir, 'package.json');
+    if (existsSync(packageJsonPath)) {
+      return currentDir;
+    }
+    currentDir = path.dirname(currentDir);
+  }
+
+  // Fallback to the old behavior if package.json not found
+  return path.resolve(__dirname, '../..');
+}
 
 function getPlatformKey(): string {
   const platform = process.platform;
@@ -148,7 +164,7 @@ async function downloadTool(toolName: string, config: ToolMetadata, platformKey:
     console.log(`   Found asset: ${asset.name}`);
 
     // Prepare download paths
-    const rootDir = path.resolve(__dirname, '../..');
+    const rootDir = getPackageRoot();
     const binDir = path.join(rootDir, 'bin', platformKey, toolName);
     const downloadPath = path.join(binDir, asset.name);
 
@@ -164,13 +180,39 @@ async function downloadTool(toolName: string, config: ToolMetadata, platformKey:
       await fs.rename(downloadPath, binaryPath);
     } else if (asset.name.endsWith('.tar.gz') || asset.name.endsWith('.tgz')) {
       // Extract tar.gz
-      binaryPath = await extractTarGz(downloadPath, binDir, platformConfig.extractPath);
+      // Replace {version} placeholder in extractPath
+      const extractPath = platformConfig.extractPath.replace('{version}', version);
+      binaryPath = await extractTarGz(downloadPath, binDir, extractPath);
       const finalPath = path.join(binDir, config.binary);
-      await fs.rename(binaryPath, finalPath);
+
+      console.log(`   Moving binary from ${binaryPath} to ${finalPath}`);
+
+      try {
+        // Check if source exists
+        await fs.access(binaryPath);
+        // Rename (move) the binary
+        await fs.rename(binaryPath, finalPath);
+      } catch (error) {
+        console.error(`   Failed to move binary: ${error}`);
+        console.error(`   Source exists: ${await fs.access(binaryPath).then(() => true).catch(() => false)}`);
+        console.error(`   Destination dir: ${path.dirname(finalPath)}`);
+        throw error;
+      }
+
       binaryPath = finalPath;
 
-      // Clean up archive
+      // Clean up archive and extracted directory
       await fs.unlink(downloadPath);
+
+      // Clean up the extracted directory (e.g., ripgrep-15.1.0-x86_64-unknown-linux-musl/)
+      const extractedDir = path.join(binDir, path.dirname(platformConfig.extractPath));
+      try {
+        await fs.rm(extractedDir, { recursive: true, force: true });
+        console.log(`   Cleaned up extracted directory: ${extractedDir}`);
+      } catch (error) {
+        // Ignore cleanup errors
+        console.warn(`   Could not clean up extracted directory: ${error}`);
+      }
     } else if (asset.name.endsWith('.zip')) {
       // For .zip files (procs), we need unzip functionality
       // For now, skip or handle separately
